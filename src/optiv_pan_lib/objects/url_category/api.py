@@ -1,0 +1,51 @@
+# src/optiv_lib/providers/pan/objects/url_category/api.py
+from __future__ import annotations
+
+from typing import List, Optional
+
+from optiv_pan_lib.base import ops
+from optiv_pan_lib.objects.url_category.model import UrlCategoryObject
+from optiv_pan_lib.objects.url_category.parser import from_xml
+from optiv_pan_lib.objects.url_category.serializer import entry_xpath, parent_xpath, to_xml
+from optiv_pan_lib.base.session import PanoramaSession
+
+
+def list_predefined_url_categories(*, session: PanoramaSession) -> List[str]:
+    """Return sorted predefined PAN-OS URL categories from /config/predefined."""
+    result = ops.config_get(session=session, xpath="/config/predefined/pan-url-categories")
+    entries = (result.get("pan-url-categories") or {}).get("entry") or []
+    names = [e.get("@name") for e in entries if isinstance(e, dict) and e.get("@name")]
+    return sorted({n for n in names if isinstance(n, str)})
+
+
+def list_url_categories(*, session: PanoramaSession, candidate: bool = True, device_group: Optional[str] = None, ) -> List[UrlCategoryObject]:
+    """List custom URL categories from candidate or running config."""
+    xpath = parent_xpath(device_group)
+    result = ops.config_get(session=session, xpath=xpath) if candidate else ops.config_show(session=session, xpath=xpath)
+    return from_xml(result, strict=True)
+
+
+def create_url_category(url_category: UrlCategoryObject, *, device_group: Optional[str], session: PanoramaSession, ) -> dict:
+    """Create (or merge) a custom URL category."""
+    xpath = parent_xpath(device_group)
+    element = to_xml(url_category)
+    return ops.config_set(session=session, xpath=xpath, element=element)
+
+
+def update_url_category(url_category: UrlCategoryObject, *, device_group: Optional[str], session: PanoramaSession, ) -> dict:
+    """Replace an existing custom URL category entry in place."""
+    xpath = entry_xpath(url_category.name, device_group)
+    element = to_xml(url_category)
+    return ops.config_edit(session=session, xpath=xpath, element=element)
+
+
+def rename_url_category(*, old_name: str, new_name: str, device_group: Optional[str], session: PanoramaSession, ) -> dict:
+    """Rename an existing custom URL category entry."""
+    xpath = entry_xpath(old_name, device_group)
+    return ops.config_rename(session=session, xpath=xpath, newname=new_name)
+
+
+def delete_url_category(*, name: str, device_group: Optional[str], session: PanoramaSession, ) -> dict:
+    """Delete a custom URL category entry."""
+    xpath = entry_xpath(name, device_group)
+    return ops.config_delete(session=session, xpath=xpath)
