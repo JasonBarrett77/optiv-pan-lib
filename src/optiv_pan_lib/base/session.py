@@ -48,6 +48,12 @@ class _NoVerifyAdapter(HTTPAdapter):
         return super().proxy_manager_for(proxy, **proxy_kwargs)
 
 
+def _silence_verify_warnings():
+    print("Warning: Verify set to false. Disabling certificate verification.")
+    import urllib3
+    urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+
+
 def _redact(text: str, secret: str) -> str:
     try:
         if not secret:
@@ -119,8 +125,10 @@ class PanoramaSession(requests.Session):
         self.base_url = f"https://{pano.hostname}/api/"
         self.timeout = pano.timeout
         self.verify = pano.verify
+        self.sanitize = pano.sanitize
 
         if pano.verify is False:
+            _silence_verify_warnings()
             adapter = _NoVerifyAdapter()
             self.mount("https://", adapter)
             self.mount("http://", adapter)

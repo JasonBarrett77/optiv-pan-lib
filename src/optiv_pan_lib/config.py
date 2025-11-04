@@ -63,6 +63,7 @@ class PanoramaConfig:
     password: Secret
     verify: VerifyType = True
     timeout: float = 15.0
+    sanitize: bool = True
 
 
 @dataclass(slots=True, frozen=True)

@@ -6,6 +6,21 @@ from typing import Any, Callable, Iterable
 import xmltodict
 
 DEFAULT_FORCE_LIST: Iterable[str | Callable[..., bool]] = ("entry", "member", "line")
+SENSITIVE_KEYS = {"pre-shared-key", "private-key", "public-key", "key", "bind-password", "password", "secret", "auth-password", "priv-password", "phash"}
+
+def sanitize(branch: dict) -> None:
+    """Recursively remove sensitive fields from nested PAN-OS config dicts."""
+    for k, v in list(branch.items()):
+        key_lower = k.lower()
+        if isinstance(v, str) and (any(token in key_lower for token in SENSITIVE_KEYS) or key_lower in SENSITIVE_KEYS):
+            branch[k] = "<redacted>"
+        elif isinstance(v, dict):
+            sanitize(v)
+        elif isinstance(v, list):
+            for item in v:
+                if isinstance(item, dict):
+                    sanitize(item)
+
 
 
 def parse_xml(text: str, *, force_list: Iterable | None = None) -> dict:

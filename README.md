@@ -66,7 +66,7 @@ Initialize the library from a JSON file with optional env lookups and CA-bundle 
 * `timeout`: float seconds. Defaults to `15.0` if omitted.
 * `app`: arbitrary keys exposed read-only via `cfg.extras`.
 
-### Usage
+### Usage Examples
 
 ```python
 from optiv_pan_lib.config import AppConfig
@@ -82,6 +82,26 @@ with PanoramaSession(pano_cfg) as sess:
 
 # access app extras (read-only)
 print(cfg.extras.project, cfg.extras.get("region"))
+```
+
+```python
+from optiv_pan_lib.config import AppConfig
+from optiv_pan_lib.base.session import PanoramaSession
+from optiv_pan_lib.device.config.api import get_effective_running_config
+from optiv_pan_lib.panorama.managed_devices.api import list_connected
+
+cfg = AppConfig.from_json("config.json")
+
+def main():
+    panorama = PanoramaSession(cfg)
+    connected_devices = list_connected(session=panorama)
+
+    for device in connected_devices:
+        eff_running = get_effective_running_config(session=panorama, device_serial=device['serial'])
+        print(eff_running)
+
+if __name__ == "__main__":
+    main()
 ```
 
 **Notes**
@@ -232,10 +252,9 @@ SPDX: choose an SPDX ID and set `project.license` in `pyproject.toml`.
 ## Minimal Example Script
 
 ```python
-# examples/list_pan_url_cats.py
-from optiv_lib.config import PanoramaConfig, Secret
-from optiv_lib.providers.pan.session import PanoramaSession
-from optiv_lib.providers.pan.objects.url_category.api import list_url_categories
+from optiv_pan_lib.config import PanoramaConfig, Secret
+from optiv_pan_lib.base.session import PanoramaSession
+from optiv_pan_lib.objects.url_category.api import list_url_categories
 
 def main() -> None:
     cfg = PanoramaConfig(

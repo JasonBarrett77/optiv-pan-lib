@@ -7,7 +7,7 @@ from typing import Any, Dict
 import requests
 
 from optiv_pan_lib.base.session import PanoramaHTTPError, PanoramaSession, PanoramaTimeoutError
-from optiv_pan_lib.base.util import parse_xml
+from optiv_pan_lib.base.util import parse_xml, sanitize
 
 
 def _check_status(doc: dict) -> None:
@@ -22,7 +22,7 @@ def _result(doc: dict) -> dict:
     return (doc.get("response") or {}).get("result") or {}
 
 
-def _call(*, session: PanoramaSession, method: str, params: Dict[str, Any], retries: int = 3, backoff: float = 0.5, ) -> dict:
+def _call(*, session: PanoramaSession, method: str, params: Dict[str, Any], retries: int = 3, backoff: float = 0.5) -> dict:
     m = method.strip().upper()
     if m not in {"GET", "POST"}:
         # Not a transport failure. Fail fast, no retry.
@@ -44,7 +44,10 @@ def _call(*, session: PanoramaSession, method: str, params: Dict[str, Any], retr
 
             doc = parse_xml(r.text)
             _check_status(doc)
-            return _result(doc)
+            result = _result(doc)
+            if session.sanitize:
+                sanitize(result)
+            return result
 
         except (requests.Timeout, requests.ConnectTimeout, requests.ReadTimeout) as e:
             # Timeouts: retry, then raise a distinct error

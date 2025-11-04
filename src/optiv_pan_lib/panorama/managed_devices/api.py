@@ -23,19 +23,21 @@ def list_all_devices(*, session: PanoramaSession) -> dict:
     return ops.op(session=session, cmd=cmd)
 
 
-def list_connected(*, session: PanoramaSession) -> dict:
+def list_connected(*, session: PanoramaSession) -> list:
     """
     Panorama → show devices connected
     Returns inner 'result'.
     """
     cmd = "<show><devices><connected/></devices></show>"
-    return ops.op(session=session, cmd=cmd)
+    result = ops.op(session=session, cmd=cmd)
+    return result.get('devices', {}).get('entry', [])
 
 
-def list_all(*, session: PanoramaSession) -> dict:
+def list_all(*, session: PanoramaSession) -> list:
     """
     Panorama → show devices all
     Returns inner 'result'.
     """
     cmd = "<show><devices><all/></devices></show>"
-    return ops.op(session=session, cmd=cmd)
+    result = ops.op(session=session, cmd=cmd)
+    return result.get('devices', {}).get('entry', [])

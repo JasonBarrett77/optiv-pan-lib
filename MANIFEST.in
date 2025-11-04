@@ -1,3 +1,2 @@
 prune examples
-prune tests
 recursive-include src/optiv_pan_lib py.typed
