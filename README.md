@@ -205,7 +205,7 @@ git push origin main --tags
 rm -rf dist build *.egg-info
 python -m pip install -U build
 python -m build
-# dist/optiv_lib-<version>-py3-none-any.whl
+# dist/optiv_pan_lib-<version>-py3-none-any.whl
 ```
 
 4. **Create GitHub Release and attach files**
